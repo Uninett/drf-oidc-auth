@@ -91,6 +91,8 @@ class BearerTokenAuthentication(BaseOidcAuthentication):
 
         return response.json()
 
+class JWTToken(dict):
+    pass
 
 class JSONWebTokenAuthentication(BaseOidcAuthentication):
     """Token based authentication using the JSON Web Token standard"""
@@ -119,7 +121,7 @@ class JSONWebTokenAuthentication(BaseOidcAuthentication):
 
         user = api_settings.OIDC_RESOLVE_USER_FUNCTION(request, payload)
 
-        return user, payload
+        return user, JWTToken(payload)
 
     def get_jwt_value(self, request):
         auth = get_authorization_header(request).split()
