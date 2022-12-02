@@ -17,7 +17,6 @@ from rest_framework.exceptions import AuthenticationFailed
 from .settings import api_settings
 from .util import cache
 
-logging.basicConfig()
 logger = logging.getLogger(__name__)
 
 
