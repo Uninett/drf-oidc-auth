@@ -5,7 +5,6 @@ import json
 import jwt
 from authlib.jose import JsonWebKey
 from authlib.oidc.discovery import get_well_known_url
-from django.contrib.auth import get_user_model
 from django.utils.encoding import smart_str
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
@@ -23,13 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_user_by_id(request, id_token):
-    User = get_user_model()
-    try:
-        user = User.objects.get_by_natural_key(id_token.get('sub'))
-    except User.DoesNotExist:
-        msg = _('Invalid Authorization header. User not found.')
-        raise AuthenticationFailed(msg)
-    return user
+    return None
 
 
 class BaseOidcAuthentication(BaseAuthentication):
