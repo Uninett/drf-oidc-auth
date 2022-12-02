@@ -1,11 +1,9 @@
 import logging
-import time
 
 import requests
-from authlib.jose import JsonWebKey, jwt
-from authlib.jose.errors import (BadSignatureError, DecodeError,
-                                 ExpiredTokenError, JoseError)
-from authlib.oidc.core.claims import IDToken
+import json
+import jwt
+from authlib.jose import JsonWebKey
 from authlib.oidc.discovery import get_well_known_url
 from django.contrib.auth import get_user_model
 from django.utils.encoding import smart_str
@@ -32,21 +30,6 @@ def get_user_by_id(request, id_token):
         msg = _('Invalid Authorization header. User not found.')
         raise AuthenticationFailed(msg)
     return user
-
-
-class DRFIDToken(IDToken):
-
-    def validate_exp(self, now, leeway):
-        super(DRFIDToken, self).validate_exp(now, leeway)
-        if now > self['exp']:
-            msg = _('Invalid Authorization header. JWT has expired.')
-            raise AuthenticationFailed(msg)
-
-    def validate_iat(self, now, leeway):
-        super(DRFIDToken, self).validate_iat(now, leeway)
-        if self['iat'] < leeway:
-            msg = _('Invalid Authorization header. JWT too old.')
-            raise AuthenticationFailed(msg)
 
 
 class BaseOidcAuthentication(BaseAuthentication):
@@ -112,7 +95,8 @@ class BearerTokenAuthentication(BaseOidcAuthentication):
 class JSONWebTokenAuthentication(BaseOidcAuthentication):
     """Token based authentication using the JSON Web Token standard"""
 
-    www_authenticate_realm = 'api'
+    REQUIRED_CLAIMS = ["exp", "nbf", "aud", "iss"]
+    SUPPORTED_ALGORITHMS = ["RS256", "RS384", "RS512"]
 
     @property
     def claims_options(self):
@@ -168,38 +152,33 @@ class JSONWebTokenAuthentication(BaseOidcAuthentication):
         return self.oidc_config['issuer']
 
     def decode_jwt(self, jwt_value):
+        """Validates a raw token and returns a decoded token if validation is successful"""
+        kid = self.get_kid(jwt_value)
         try:
-            id_token = jwt.decode(
-                jwt_value.decode('ascii'),
-                self.jwks(),
-                claims_cls=DRFIDToken,
-                claims_options=self.claims_options
+            validated_token = jwt.decode(
+                jwt=jwt_value,
+                algorithms=self.SUPPORTED_ALGORITHMS,
+                key=self.get_public_key(kid),
+                options={"require": self.REQUIRED_CLAIMS},
+                audience=api_settings.OIDC_CLAIMS_OPTIONS['aud']['value'],
+                issuer=self.issuer,
             )
-        except (BadSignatureError, DecodeError):
-            msg = _(
-                'Invalid Authorization header. JWT Signature verification failed.')
-            logger.exception(msg)
-            raise AuthenticationFailed(msg)
-        except AssertionError:
-            msg = _(
-                'Invalid Authorization header. Please provide base64 encoded ID Token'
-            )
-            raise AuthenticationFailed(msg)
+            return validated_token
+        except jwt.exceptions.PyJWTError as e:
+            raise AuthenticationFailed(f"Error validating token: {e}")
 
-        return id_token
+    def get_kid(self, token):
+        """Gets the kid value from the header of a raw token"""
+        header = jwt.get_unverified_header(token)
+        kid = header.get("kid")
+        if not kid:
+            raise AuthenticationFailed("Token must include the 'kid' header")
+        return kid
 
-    def validate_claims(self, id_token):
-        try:
-            id_token.validate(
-                now=int(time.time()),
-                leeway=int(time.time()-api_settings.OIDC_LEEWAY)
-            )
-        except ExpiredTokenError:
-            msg = _('Invalid Authorization header. JWT has expired.')
-            raise AuthenticationFailed(msg)
-        except JoseError as e:
-            msg = _(str(type(e)) + str(e))
-            raise AuthenticationFailed(msg)
-
-    def authenticate_header(self, request):
-        return 'JWT realm="{0}"'.format(self.www_authenticate_realm)
+    def get_public_key(self, kid):
+        """Gets public key from OIDC endpoint that matches kid"""
+        jwks = self.jwks_data()
+        for jwk in jwks.get("keys"):
+            if jwk["kid"] == kid:
+                return jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
+        raise AuthenticationFailed(f"Invalid kid '{kid}'")
