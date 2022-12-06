@@ -17,6 +17,13 @@ DEFAULTS = {
         }
     },
 
+    'OIDC_ISSUERS': {
+        "issuer1": "oidc_endpoint",
+    },
+    'LOCAL_KEY_ISSUERS': {
+        "issuer2": "public_key_string",
+    },
+
     # Number of seconds in the past valid tokens can be issued
     'OIDC_LEEWAY': 600,
 
