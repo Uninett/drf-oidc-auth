@@ -1,3 +1,4 @@
+from oidc_auth.test import PEM_PUBLIC_KEY
 SECRET_KEY = 'secret'
 DATABASES = {
     'default': {
@@ -5,17 +6,22 @@ DATABASES = {
         'NAME': ':memory:'
     }
 }
-INSTALLED_APPS = (
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-)
+REST_FRAMEWORK = {
+    'UNAUTHENTICATED_USER': None,
+}
 ROOT_URLCONF = 'tests.test_authentication'
+
 OIDC_AUTH = {
-    'OIDC_ENDPOINT': 'http://example.com',
-    'OIDC_CLAIMS_OPTIONS': {
-        'aud': {
-            'values': ['you'],
-            'essential': True,
+    'ISSUERS': {
+        'http://example.com': {
+            'type': "JWKS",
+            'key': "http://example.com",
+            'aud': 'you',
+        },
+        'local': {
+            'type': "PEM",
+            'key': PEM_PUBLIC_KEY,
+            'aud': 'local_aud',
         }
     },
 }
