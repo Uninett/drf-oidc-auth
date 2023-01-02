@@ -38,15 +38,6 @@ registered as the default authentication classes.
 And configure the module itself in settings.py:
 ```py
 OIDC_AUTH = {
-    # The Claims Options can now be defined by a static string
-    # The ISSUERS setting is used to configure the 'iss' and 'aud' claim options,
-    # so do not set these claims here unless you know what you are doing
-    # ref: https://docs.authlib.org/en/latest/jose/jwt.html#jwt-payload-claims-validation
-    'OIDC_CLAIMS_OPTIONS': {
-        'nbf': {
-            'essential': True,
-        },
-    },
     # Dict of issuers mapping to key source. `type` can be either `PEM` or `JWKS`. If `PEM`, then the `key` value
     # should be a string containing a public key in PEM format. For `JWKS` it should be the URL for a JWKS endpoint.
     # `aud` must also be configured per issuer. This should match the value the token issuer sets for the `aud` claim
