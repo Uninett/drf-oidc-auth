@@ -14,10 +14,7 @@ pem_key = RSAKey.generate_key(is_private=True)
 
 def get_public_key(key):
     """Returns public key for a RSAKey object"""
-    public_key = key.get_public_key().public_bytes(
-        encoding=crypto_serialization.Encoding.PEM,
-        format= crypto_serialization.PublicFormat.SubjectPublicKeyInfo,
-    ).decode("utf-8")
+    public_key = key.as_bytes(is_private=False).decode("utf-8")
     return public_key
 
 PEM_PUBLIC_KEY = get_public_key(pem_key)
