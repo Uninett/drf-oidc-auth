@@ -1,19 +1,24 @@
-# OpenID Connect authentication for Django Rest Framework
+# JWT multi-issuer authentication for Django Rest Framework
 
-This package contains an authentication mechanism for authenticating
-users of a REST API using tokens obtained from OpenID Connect.
+
+This package is a fork of [drf-oidc-auth](https://github.com/ByteInternet/drf-oidc-auth)
+with added functionality of supporting multiple JWT issuers and a few
+other fixes.
 
 Currently, it only supports JWT and Bearer tokens. JWT tokens will be
-validated against the public keys of an OpenID connect authorization
-service. Bearer tokens are used to retrieve the OpenID UserInfo for a
-user to identify him.
+validated against the public keys of various sources that can be configured.
+These can either be JWKS endpoints or PEM strings.
+
+Bearer tokens are used to retrieve OpenID UserInfo for a
+user to identify him. These tokens are not a priority for this fork,
+so these only support one OpenID endpoint.
 
 # Installation
 
 Install using pip:
 
 ```sh
-pip install drf-oidc-auth
+pip install drf-jwt-multi-auth
 ```
 
 Configure authentication for Django REST Framework in settings.py:
