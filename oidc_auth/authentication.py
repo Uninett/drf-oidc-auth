@@ -167,6 +167,7 @@ class JSONWebTokenAuthentication(BaseAuthentication):
         try:
             id_token.validate(
                 now=int(time.time()),
+                leeway=api_settings.LEEWAY,
             )
         except ExpiredTokenError:
             msg = _('Invalid Authorization header. JWT has expired.')

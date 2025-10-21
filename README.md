@@ -85,6 +85,10 @@ OIDC_AUTH = {
 
     # (Optional) A cache key prefix when storing and retrieving cached values
     'OIDC_CACHE_PREFIX': 'oidc_auth.',
+
+    # (Optional) Leeway gives some +- leeway to when a token is active. Given in seconds
+    # This helps account for clockskew (default 5 seconds)
+    'LEEWAY': 5,
 }
 ```
 

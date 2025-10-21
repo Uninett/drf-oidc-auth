@@ -1,4 +1,5 @@
 import sys
+from datetime import datetime, timedelta
 
 from authlib.jose.errors import BadSignatureError, DecodeError
 from django.http import HttpResponse
@@ -255,3 +256,20 @@ class TestJWTAuthentication(AuthenticationTestCaseMixin, TestCase):
         auth = 'JWT ' + make_id_token(kid="invalid kid")
         resp = self.client.get('/test/', HTTP_AUTHORIZATION=auth)
         self.assertEqual(resp.status_code, 401, resp.content)
+
+    def test_token_outside_nbf_but_within_leeway_should_be_valid(self):
+        # default leeway is 5 seconds but we use 4 since there is small window
+        # between token being created and it being validated
+        future = datetime.now() + timedelta(seconds=4)
+        auth = 'JWT ' + make_id_token(nbf=future.timestamp())
+        resp = self.client.get('/test/', HTTP_AUTHORIZATION=auth)
+        self.assertEqual(resp.status_code, 200, resp.content)
+
+
+    def test_token_outside_exp_but_within_leeway_should_be_valid(self):
+        # default leeway is 5 seconds but we use 4 since there is small window
+        # between token being created and it being validated
+        past = datetime.now() - timedelta(seconds=4)
+        auth = 'JWT ' + make_id_token(exp=past.timestamp())
+        resp = self.client.get('/test/', HTTP_AUTHORIZATION=auth)
+        self.assertEqual(resp.status_code, 200, resp.content)

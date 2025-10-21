@@ -33,6 +33,10 @@ DEFAULTS = {
 
     # URL of the OpenID Provider's UserInfo Endpoint
     'USERINFO_ENDPOINT': None,
+
+    # Leeway gives some +- leeway to when a token is active. Given in seconds
+    # This helps account for clockskew
+    'LEEWAY': 5,
 }
 
 # List of settings that may be in string import notation.
