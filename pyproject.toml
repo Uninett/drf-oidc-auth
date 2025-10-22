@@ -7,7 +7,7 @@ packages = ["oidc_auth/"]
 
 [project]
 name = "drf-jwt-multi-auth"
-version = "1.0.0"
+version = "1.1.0"
 authors = [
   { name="Simon O. Tveit", email="simon.tveit@sikt.no"},
 ]
